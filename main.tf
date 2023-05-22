@@ -3,24 +3,45 @@ terraform {
   required_version = ">= 1.0.0"
 
   required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "2.94.0"
+    }
+
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.0"
+      version = "3.73.0"
     }
   }
-  backend "s3" {
-    bucket = "terraform-bucket-aula"
-    key    = "aws-vm/terraform.tfstate"
-    region = "us-east-1"
+
+  backend "azurerm" {
+    resource_group_name  = "remote-state"
+    storage_account_name = "danielgilremotestate"
+    container_name       = "remote-state"
+    key                  = "pipeline-github-actions/terraform.tfstate"
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+data "terraform_remote_state" "vnet" {
+  backend = "azurerm"
+  config = {
+    resource_group_name  = "remote-state"
+    storage_account_name = "danielgilremotestate"
+    container_name       = "remote-state"
+    key                  = "azure-vnet/terraform.tfstate"
   }
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "eu-central-1"
 
   default_tags {
     tags = {
-      owner      = "germano"
+      owner      = "danielgil"
       managed-by = "terraform"
     }
   }
